@@ -1,0 +1,7 @@
+{
+  "path": ["src"],
+  "minTokens": 50,
+  "ignore": ["**/*.test.ts", "**/*.test.tsx"],
+  "reporters": ["console"],
+  "noColors": true
+}
