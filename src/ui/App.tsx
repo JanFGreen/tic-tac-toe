@@ -1,72 +1,62 @@
-import { type ReactElement, useReducer } from 'react';
+import { type ReactElement, useMemo, useReducer, useState } from 'react';
 import type { Random } from '@/domain/computer';
-import { defaultSettings, initialSession, sessionReducer, settingsLocked } from '@/domain/session';
-import { Board } from './Board';
-import { Button } from './components/Button';
-import { RoundStatus } from './RoundStatus';
-import { Scoreboard } from './Scoreboard';
-import { SetupPanel } from './SetupPanel';
+import { defaultSettings, initialSession, sessionReducer } from '@/domain/session';
+import { GameScreen } from './GameScreen';
+import { createLeaderboardApi, type LeaderboardApi } from './leaderboard-api';
+import { LeaderboardScreen } from './LeaderboardScreen';
+import { browserStorage, type NicknameStorage } from './nickname-storage';
 import { useComputerTurn } from './useComputerTurn';
+import { usePendingResult } from './usePendingResult';
 import './App.css';
 
-type AppProps = { random?: Random; thinkingMs?: number };
+type AppProps = {
+  random?: Random;
+  thinkingMs?: number;
+  api?: LeaderboardApi;
+  /** `null` means no device storage; leaving it out uses the browser's. */
+  storage?: NicknameStorage | null;
+  confirm?: (message: string) => boolean;
+};
+
+type Screen = 'game' | 'leaderboard';
 
 const defaultThinkingMs = 600;
 
-export function App({ random = Math.random, thinkingMs = defaultThinkingMs }: AppProps): ReactElement {
-  const [session, dispatch] = useReducer(sessionReducer, defaultSettings, initialSession);
-  useComputerTurn(session, dispatch, { random, thinkingMs });
-  const { round } = session;
-  const ready = round.phase === 'ready';
+const browserConfirm = (message: string) => window.confirm(message);
 
+export function App({
+  random = Math.random,
+  thinkingMs = defaultThinkingMs,
+  api,
+  storage,
+  confirm = browserConfirm,
+}: AppProps): ReactElement {
+  const [session, dispatch] = useReducer(sessionReducer, defaultSettings, initialSession);
+  const [screen, setScreen] = useState<Screen>('game');
+  const leaderboardApi = useMemo(() => api ?? createLeaderboardApi(fetch), [api]);
+  const deviceStorage = useMemo(() => (storage === undefined ? browserStorage() : storage), [storage]);
+  useComputerTurn(session, dispatch, { random, thinkingMs });
+  const pending = usePendingResult(session, { api: leaderboardApi, storage: deviceStorage, confirm });
+
+  if (screen === 'leaderboard') {
+    return (
+      <LeaderboardScreen
+        api={leaderboardApi}
+        initialDifficulty={session.settings.difficulty}
+        onBack={() => {
+          setScreen('game');
+        }}
+      />
+    );
+  }
   return (
-    <main className="app">
-      <h1>Tic-tac-toe</h1>
-      <RoundStatus session={session} />
-      {ready ? (
-        <Button
-          onClick={() => {
-            dispatch({ type: 'start' });
-          }}
-        >
-          Start round
-        </Button>
-      ) : null}
-      <Board
-        board={round.board}
-        winningLine={round.phase === 'over' && round.outcome.kind === 'win' ? round.outcome.line : null}
-        locked={round.phase !== 'playing'}
-        onPlace={(cell) => {
-          dispatch({ type: 'place', cell });
-        }}
-      />
-      <Scoreboard score={session.score} />
-      <div className="app__actions">
-        {ready ? null : (
-          <Button
-            onClick={() => {
-              dispatch({ type: 'newRound' });
-            }}
-          >
-            New round
-          </Button>
-        )}
-        <Button
-          variant="secondary"
-          onClick={() => {
-            dispatch({ type: 'resetScore' });
-          }}
-        >
-          Reset score
-        </Button>
-      </div>
-      <SetupPanel
-        settings={session.settings}
-        locked={settingsLocked(session)}
-        onChange={(settings) => {
-          dispatch({ type: 'changeSettings', settings });
-        }}
-      />
-    </main>
+    <GameScreen
+      session={session}
+      dispatch={dispatch}
+      pending={pending}
+      onOpenLeaderboard={() => {
+        setScreen('leaderboard');
+      }}
+    />
   );
 }
