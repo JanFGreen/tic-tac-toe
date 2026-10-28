@@ -7,8 +7,8 @@ dist
 coverage/
 *.tsbuildinfo
 
-# local data
-data/*.db
+# local data (the results database lives under the root data/ directory)
+/data/
 *.db
 *.db-*
 *.sqlite
