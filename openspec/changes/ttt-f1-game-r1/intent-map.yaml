@@ -1,0 +1,52 @@
+links:
+- intent: Classic 3x3 board, alternating X and O, occupied cell impossible
+  requirement_ids:
+  - REQ-1
+  - REQ-2
+- intent: Two modes chosen before a round (two players, or against the computer)
+  requirement_ids:
+  - REQ-3
+  - REQ-4
+- intent: Difficulty easy / medium / hard (hard never loses)
+  requirement_ids:
+  - REQ-3
+  - REQ-5
+  - REQ-14
+- intent: Computer answers after a short visible thinking pause
+  requirement_ids:
+  - REQ-6
+- intent: Screen shows whose turn it is, the winner, the highlighted winning line,
+    or a draw
+  requirement_ids:
+  - REQ-7
+  - REQ-2
+- intent: Session scoreboard with New round (keeps score) and Reset score (clears
+    it)
+  requirement_ids:
+  - REQ-8
+  - REQ-3
+- intent: Fair choice of who starts the next round
+  requirement_ids:
+  - REQ-4
+- intent: Playable by mouse, touch and keyboard only (arrow keys move between cells)
+  requirement_ids:
+  - REQ-9
+- intent: Screen readers announce the board, moves and the result
+  requirement_ids:
+  - REQ-10
+- intent: Works on a 360 px phone and on desktop, in light and dark color schemes
+  requirement_ids:
+  - REQ-11
+- intent: Modern, polished look with subtle animations, not a default HTML page
+  requirement_ids:
+  - REQ-12
+  - REQ-13
+- intent: Game rules are pure functions in src/domain with unit tests
+  requirement_ids:
+  - REQ-14
+- intent: No new dependencies, static Vite build, English UI in src/ui
+  requirement_ids:
+  - REQ-15
+- intent: Record the session result as a plain value for F2
+  requirement_ids:
+  - REQ-16

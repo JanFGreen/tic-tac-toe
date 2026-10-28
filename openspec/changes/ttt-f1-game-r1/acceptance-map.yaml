@@ -1,0 +1,126 @@
+criteria:
+- id: AC-1
+  observable: A unit test plays the hard computer against every possible opponent
+    move sequence, in both starting orders, and finds no position where the computer
+    loses.
+  requirement_ids:
+  - REQ-14
+  - REQ-5
+- id: AC-2
+  observable: Unit tests show each of the eight lines is detected for X and for O,
+    and a full board without a line is a draw.
+  requirement_ids:
+  - REQ-2
+- id: AC-3
+  observable: 'A component test using only user-event keyboard input plays a complete
+    round to a result: Tab enters the board once, arrow keys move focus to each target
+    cell, Enter or Space places the mark, then Tab reaches New round and activates
+    it. The test fails if a cell is reached by anything other than arrow keys after
+    the first focus.'
+  requirement_ids:
+  - REQ-9
+- id: AC-4
+  observable: Activating an occupied cell leaves the board and the turn unchanged;
+    the mark is not replaced.
+  requirement_ids:
+  - REQ-1
+- id: AC-5
+  observable: After a win or draw no empty cell can be marked until New round is used.
+  requirement_ids:
+  - REQ-1
+  - REQ-7
+- id: AC-6
+  observable: The setup panel offers two players or computer mode; difficulty options
+    easy, medium and hard appear only in computer mode; the controls are disabled
+    during a round and enabled when it ends.
+  requirement_ids:
+  - REQ-3
+- id: AC-7
+  observable: After the mode or difficulty is changed between rounds, the three scoreboard
+    counts are unchanged; only Reset score zeroes them.
+  requirement_ids:
+  - REQ-3
+  - REQ-8
+- id: AC-8
+  observable: Round 1 starts with X; rounds 2, 3 and 4 start with O, X and O, including
+    after a draw; in computer mode the chosen player mark is respected.
+  requirement_ids:
+  - REQ-4
+- id: AC-9
+  observable: 'With an injected random, unit tests show: easy returns only legal moves;
+    medium takes a winning move, otherwise blocks an immediate player win, otherwise
+    plays a random legal move.'
+  requirement_ids:
+  - REQ-5
+  - REQ-14
+- id: AC-10
+  observable: With fake timers, after the player's move the board is blocked and the
+    computer's mark appears only after the delay; New round during the pause means
+    the stale move is never applied.
+  requirement_ids:
+  - REQ-6
+- id: AC-11
+  observable: A visible turn indicator names X or O at the start and after every move,
+    including the computer's; at round end the winner and the winning cells are highlighted,
+    or a draw is announced.
+  requirement_ids:
+  - REQ-7
+- id: AC-12
+  observable: The scoreboard counts X wins, O wins and draws; New round keeps the
+    counts; Reset score sets them to 0, 0, 0.
+  requirement_ids:
+  - REQ-8
+- id: AC-13
+  observable: Each cell has an accessible name such as 'Row 1, column 2, empty' or
+    'X'; a polite live region text changes to announce each move, the next turn and
+    the result.
+  requirement_ids:
+  - REQ-10
+- id: AC-14
+  observable: At a 360 px viewport there is no horizontal scroll and every interactive
+    control is at least 44 px; both color schemes keep text contrast of at least 4.5:1.
+  requirement_ids:
+  - REQ-11
+- id: AC-15
+  observable: Screenshots in light, dark and 360 px views meet the min visual score;
+    under prefers-reduced-motion the animations are removed or shortened.
+  requirement_ids:
+  - REQ-12
+- id: AC-16
+  observable: docs/DESIGN.md exists with the six required sections; the tokens module
+    exists; no screen style contains a literal color, size or spacing value outside
+    the tokens.
+  requirement_ids:
+  - REQ-13
+- id: AC-17
+  observable: src/domain has no React or DOM imports; package.json is unchanged; `npm
+    run check` passes.
+  requirement_ids:
+  - REQ-14
+  - REQ-15
+- id: AC-18
+  observable: A unit test shows the finished round yields a plain JSON-serializable
+    result value (winner or draw, mode, difficulty, player mark); no network call
+    is made.
+  requirement_ids:
+  - REQ-16
+- id: AC-19
+  observable: Unit tests with an injected random show easy is genuinely random and
+    not threat-aware. (a) In a position where the computer has an immediate win, a
+    random value selecting another legal cell makes easy play that other cell. (b)
+    In a position where the opponent threatens to win, a random value selecting a
+    non-blocking cell makes easy play that cell. (c) Sweeping the random value over
+    its range reaches every legal cell, so each legal cell is chosen at least once.
+    The same sweeps show medium and hard do not behave this way.
+  requirement_ids:
+  - REQ-5
+  - REQ-14
+- id: AC-20
+  observable: 'A component test with user-event shows: exactly one cell has tabindex
+    0 at any time; after Tab into the board, ArrowRight, ArrowLeft, ArrowDown and
+    ArrowUp move DOM focus to the adjacent cell and place no mark; ArrowUp on the
+    top row, ArrowLeft on the left column and the matching moves on the other edges
+    leave focus on the same cell with no wrap; Enter and Space on the focused cell
+    place a mark.'
+  requirement_ids:
+  - REQ-9
