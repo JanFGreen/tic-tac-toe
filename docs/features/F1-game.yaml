@@ -1,0 +1,26 @@
+feature_id: TTT-F1-GAME
+repo_id: tic-tak-toe
+original_request: |
+  Build the tic-tac-toe game in the browser, replacing the placeholder screen.
+
+  - Classic 3x3 board, players X and O alternate; a move on an occupied cell is impossible.
+  - Two modes chosen before a round: two players on one device, or one player against the computer.
+  - Against the computer the player picks a difficulty: easy (makes mistakes), medium, and hard
+    (never loses). The computer answers after a short, visible "thinking" pause.
+  - The screen always shows whose turn it is; when a round ends it shows the winner and highlights
+    the winning line, or announces a draw.
+  - A session scoreboard counts X wins, O wins and draws; "New round" keeps the score,
+    "Reset score" clears it. Who starts the next round must be fair.
+  - Playable by mouse, touch and keyboard only (arrow keys move between cells, Enter/Space places
+    a mark); screen readers announce the board, moves and the result.
+  - Works well on a phone (360 px wide) and on desktop, in light and dark color schemes.
+  - It should look modern and polished and feel good to play (subtle animations), not like a
+    default HTML page.
+goal: A complete, accessible, good-looking tic-tac-toe game for one or two players in the browser.
+constraints:
+  - Game rules (board, winner/draw detection, computer player) are pure functions in src/domain with unit tests.
+  - No new dependencies; the client is a static Vite build.
+acceptance_criteria:
+  - The hard computer never loses from any position reachable in a game.
+  - All eight winning lines are detected; a full board without a line is a draw.
+  - A full round can be played with the keyboard only.
