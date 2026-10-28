@@ -1,0 +1,165 @@
+{
+  "verdict": "PASS",
+  "envelope": {
+    "schema_version": "1",
+    "kind": "decomposition-review",
+    "verdict": "PASS",
+    "summary": "Every requirement (REQ-1..REQ-12) is covered by at least one task with named verification. The 8-task DAG is acyclic with contracts produced before consumers. No parallel_safe_with pair overlaps in file_scope, each leaf has an explicit contract and observable acceptance, and all future needs are hypothetical, with no speculative tasks. One low, non-blocking note concerns the order in which the rate-limit plugin and the save route are registered in TASK-03.",
+    "findings": [
+      {
+        "id": "F-DR-RL-ORDER",
+        "severity": "low",
+        "blocking": false,
+        "requirement_ids": [
+          "REQ-4"
+        ],
+        "location": {
+          "path": "src/server/app.ts",
+          "line": 4
+        },
+        "problem": "@fastify/rate-limit applies per-route limits through an onRoute hook that it adds only when the plugin loads (node_modules/@fastify/rate-limit/index.js:172). buildApp() is synchronous (src/server/app.ts:4). If TASK-03 calls registerResultsRoute(app, store) directly after app.register(rateLimit), the POST route can be declared before that hook exists, and the route-level limit would silently not apply. The planned 429 inject test would catch this, so it is a risk to implementation, not a gap in the decomposition.",
+        "evidence_ids": [],
+        "expected_fix": "In TASK-03, register the results route inside an encapsulated app.register(...) plugin (or after the rate-limit plugin has loaded), so the onRoute hook sees the route config. Keep the 11th-save 429 inject test as the guard.",
+        "status": "open"
+      }
+    ],
+    "checked_criteria": [
+      "Digests: the plan targets spec_digest 77c1f7b7… from the snapshot identity; controller_dag_problems is empty",
+      "Coverage, requirement to task: REQ-1..REQ-12 each map to ≥1 task with verification (see requirements_map)",
+      "Coverage, task to requirement: every task lists requirement_ids; no orphan tasks",
+      "DAG: depends_on references exist, there are no cycles, and the critical path is TASK-01 -> TASK-05 -> TASK-06/07 -> TASK-08, with server path TASK-01 -> TASK-02 -> TASK-03 -> TASK-04",
+      "Shared contracts come before consumers: domain types (TASK-01) precede the store, routes and UI; ResultsStore (TASK-02) precedes routes (TASK-03/04); LeaderboardApi (TASK-05) precedes TASK-06/07; the HTTP contract is written out in TASK-05 inputs",
+      "File conflicts: no parallel_safe_with pair shares a file_scope; src/server/app.ts is in both TASK-03 and TASK-04, but those run in sequence (TASK-04 depends on TASK-03); docs/ARCHITECTURE.md (TASK-04) and docs/DESIGN.md (TASK-07) are each owned by one task; the parallel_safe_with relations are symmetric",
+      "Breaking contract change: buildApp() currently has no parameters (src/server/app.ts:4), and its callers src/server/main.ts:4 and src/server/app.test.ts:6 are both in TASK-03's file_scope",
+      "Lockfile/dependencies: no task touches package.json or the lockfile; @fastify/rate-limit is installed in node_modules",
+      "Layer rules: the eslint.config.mjs domain/ui/server import restrictions (lines 24-44) fit each task's file placement; the 60-line function limit (line 55) motivates the GameScreen extraction in TASK-08",
+      "Domain facts the plan relies on: RoundResult has difficulty and playerMark, both null in two-player mode (src/domain/session.ts:20-25); roundId increments on newRound/resetScore (lines 126, 132), which supports stale-response handling",
+      "Atomic leaves: each leaf has 1-3 production files and an estimate of 25-45 minutes; outputs give signatures; verification names concrete test cases",
+      "Difficulty labels match controller_difficulty (TASK-01 easy with a full contract; the others medium); no hard leaves",
+      "Over-decomposition: no test-only tasks, no empty file_scope, no trivially mergeable tasks",
+      "Vertical integration: server and client lanes are each connected incrementally and meet through an explicit HTTP contract; App wiring is in TASK-08",
+      "Supporting work: .gitignore for data/ (currently only data/*.db, at .gitignore:11) widened in TASK-02; schema created if missing; error paths (400/413/429/unreachable) covered; ARCHITECTURE.md and DESIGN.md docs updated; no migration needed for a new table",
+      "Future needs: all four are hypothetical and none appears as a task",
+      "Limits: depth 1, 8 leaves (≤20), no requirement dropped or weakened"
+    ],
+    "limitations": [
+      "No commands were run (read-only review); the claim that npm run check passes on the base commit was not verified",
+      "The 360 px no-horizontal-scroll check (REQ-11) depends on the CSS design in TASK-07 and cannot be fully proven in jsdom; feature acceptance has to confirm it",
+      "End-to-end client-server integration over real HTTP is left to the controller's FEATURE_ACCEPTANCE stage, as the skill instructs"
+    ],
+    "payload": {
+      "requirements_map": {
+        "REQ-1": [
+          "TASK-01",
+          "TASK-06",
+          "TASK-08"
+        ],
+        "REQ-2": [
+          "TASK-05",
+          "TASK-06"
+        ],
+        "REQ-3": [
+          "TASK-01",
+          "TASK-03"
+        ],
+        "REQ-4": [
+          "TASK-03",
+          "TASK-04",
+          "TASK-05"
+        ],
+        "REQ-5": [
+          "TASK-02",
+          "TASK-04",
+          "TASK-07"
+        ],
+        "REQ-6": [
+          "TASK-07",
+          "TASK-08"
+        ],
+        "REQ-7": [
+          "TASK-02",
+          "TASK-03",
+          "TASK-04"
+        ],
+        "REQ-8": [
+          "TASK-05",
+          "TASK-06",
+          "TASK-07",
+          "TASK-08"
+        ],
+        "REQ-9": [
+          "TASK-03",
+          "TASK-06",
+          "TASK-08"
+        ],
+        "REQ-10": [
+          "TASK-03",
+          "TASK-04"
+        ],
+        "REQ-11": [
+          "TASK-06",
+          "TASK-07",
+          "TASK-08"
+        ],
+        "REQ-12": [
+          "TASK-01"
+        ]
+      },
+      "per_task": [
+        {
+          "task_id": "TASK-01",
+          "verdict": "PASS",
+          "notes": "Pure domain contract written out in full; matches the RoundResult shape in session.ts; eslint enforces domain purity."
+        },
+        {
+          "task_id": "TASK-02",
+          "verdict": "PASS",
+          "notes": "Store port, SQL ordering, latest spelling, top 20, persistence and the data/ gitignore all have tests."
+        },
+        {
+          "task_id": "TASK-03",
+          "verdict": "PASS",
+          "notes": "Updates both buildApp callers; validation, 413 and 429 tests, plus the forwarding-header and trustProxy cases. See low note F-DR-RL-ORDER on plugin/route registration order."
+        },
+        {
+          "task_id": "TASK-04",
+          "verdict": "PASS",
+          "notes": "Leaderboard route, reads not limited by the write limit, persistence through the API, storage boundary test and ARCHITECTURE.md. Runs after TASK-03 on app.ts."
+        },
+        {
+          "task_id": "TASK-05",
+          "verdict": "PASS",
+          "notes": "Injectable fetch API with error mapping and safe nickname storage; the HTTP contract is stated."
+        },
+        {
+          "task_id": "TASK-06",
+          "verdict": "PASS",
+          "notes": "Pending-result hook (difficulty taken from the round, ignores stale responses for older rounds, discard guard) plus the save form with design copy and token-only CSS."
+        },
+        {
+          "task_id": "TASK-07",
+          "verdict": "PASS",
+          "notes": "Leaderboard screen states, retry, stale-response handling and back control; owns the DESIGN.md Voice update."
+        },
+        {
+          "task_id": "TASK-08",
+          "verdict": "PASS",
+          "notes": "App integration with GameScreen extracted for the lint limit; the guard wraps both New round and Reset score; offline and navigation tests."
+        }
+      ],
+      "dag_ok": true
+    }
+  },
+  "dag_problems": [],
+  "order": [
+    "TASK-01",
+    "TASK-02",
+    "TASK-03",
+    "TASK-04",
+    "TASK-05",
+    "TASK-06",
+    "TASK-07",
+    "TASK-08"
+  ],
+  "controller_problems": []
+}
