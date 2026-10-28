@@ -1,0 +1,69 @@
+/* Board grid and cells. Only var(--…) values and the literals allowed by docs/DESIGN.md. */
+
+.board {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: var(--layout-board-max-width);
+  aspect-ratio: var(--layout-board-aspect-ratio);
+  margin-inline: auto;
+}
+
+.board__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--layout-min-touch-target);
+  min-height: var(--layout-min-touch-target);
+  padding: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-low);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-xxl);
+  line-height: var(--font-line-height-xxl);
+  cursor: pointer;
+}
+
+.board__cell[aria-disabled='true'] {
+  cursor: default;
+}
+
+.board__cell:not([aria-disabled='true']):hover {
+  border-color: var(--color-primary);
+}
+
+.board__cell--x {
+  color: var(--color-mark-x);
+}
+
+.board__cell--o {
+  color: var(--color-mark-o);
+}
+
+.board__cell--winning {
+  background: var(--color-surface);
+  border-color: var(--color-success);
+  box-shadow: var(--shadow-high);
+  animation: board-line-in var(--motion-slow) var(--motion-easing) both;
+}
+
+.board__mark {
+  animation: board-mark-in var(--motion-base) var(--motion-easing) both;
+}
+
+@keyframes board-mark-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--motion-mark-scale-from));
+  }
+}
+
+@keyframes board-line-in {
+  from {
+    transform: scale(var(--motion-line-scale-from));
+  }
+}
