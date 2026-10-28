@@ -1,5 +1,6 @@
 import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance } from 'fastify';
+import { registerLeaderboardRoute } from './leaderboard-route';
 import { registerResultsRoute } from './results-route';
 import type { ResultsStore } from './results-store';
 
@@ -14,6 +15,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
     registerResultsRoute(instance, options.store);
     done();
   });
+  registerLeaderboardRoute(app, options.store);
   app.get('/api/health', () => ({ status: 'ok' }));
   return app;
 }
