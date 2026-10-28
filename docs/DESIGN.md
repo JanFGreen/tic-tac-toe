@@ -56,11 +56,15 @@ properties that `themeCss` does not define.
 - One centered column, at most `--layout-max-content-width` wide, with `--space-4` side padding.
   Nothing scrolls horizontally at 360 px.
 - Order from top: title, turn/status line, board, scoreboard, round controls (New round,
-  Reset score), setup panel. From `--layout-breakpoint-wide` the setup panel may sit beside the
+  Reset score, Leaderboard), setup panel. After a finished round against the computer the save
+  form (Nickname, Save result) sits between the scoreboard and the round controls. From `--layout-breakpoint-wide` the setup panel may sit beside the
   board.
 - The board is a square 3x3 grid (`aspect-ratio: var(--layout-board-aspect-ratio)`,
   `grid-template-columns: 1fr 1fr 1fr`), `width: 100%` up to `--layout-board-max-width`, with
   `--space-2` gaps.
+- The leaderboard is its own screen in the same column: title "Leaderboard", the difficulty
+  choice, the table (Rank, Nickname, Wins, Draws, Losses) in a Panel, then one secondary
+  "Back to game" button. The Nickname column takes the remaining width and wraps long names.
 - Every interactive control is at least `--layout-min-touch-target` (44 px) high and wide.
 - Spacing between groups `--space-5`, inside a panel `--space-3` or `--space-4`.
 
@@ -99,5 +103,10 @@ English, short and plain. Name the actor and the action.
 - Result: "X wins", "O wins", "Draw".
 - Controls: "New round", "Reset score", "Two players", "Against the computer", "Easy",
   "Medium", "Hard", "Play as X", "Play as O".
+- Leaderboard: "Leaderboard", "Back to game", "Difficulty", "Rank", "Nickname", "Wins", "Draws",
+  "Losses", "Loading…", "No results saved yet.".
+- Saving a result: "Save result", "Nickname", "Save", "Result saved.",
+  "Too many saves, try again later.", "Discard the unsaved result?".
+- Server problems: "Cannot reach the server.", "Retry".
 - Cells for screen readers: "Row 1, column 2, empty", "Row 3, column 3, X".
 - No exclamation marks, no blame, no jokes.
