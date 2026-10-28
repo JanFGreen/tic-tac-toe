@@ -1,0 +1,22 @@
+/* Page layout: one centred column. Only var(--…) values and the literals allowed by docs/DESIGN.md. */
+
+.app {
+  display: grid;
+  grid-template-columns: 100%;
+  justify-items: stretch;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: var(--layout-max-content-width);
+  margin-inline: auto;
+}
+
+.app > h1 {
+  text-align: center;
+}
+
+.app__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}

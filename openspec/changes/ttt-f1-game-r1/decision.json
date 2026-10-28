@@ -1,0 +1,63 @@
+{
+  "selection": {
+    "selected_option_id": "OPT-A",
+    "scores": {
+      "OPT-A": 0.9,
+      "OPT-B": 0.71
+    },
+    "rejected": {},
+    "near_tie": false,
+    "notes": []
+  },
+  "selected_option_id": "OPT-A",
+  "options": {
+    "options": [
+      {
+        "option_id": "OPT-A",
+        "title": "Pure session state machine in src/domain + thin React shell",
+        "description": "src/domain: board.ts (readonly 9-cell tuple, legal moves, applyMove returning a typed result that rejects occupied cells and finished rounds), lines.ts (8 winning lines, winner/draw with the winning line), computer.ts (easy: random legal move from an injected random; medium: win, else block, else random; hard: minimax with alpha-beta and depth-adjusted scores), session.ts (pure reducer over a discriminated union: phase 'playing' | 'computer-thinking' | 'over'; mode/difficulty/player mark locked while a round is not over; newRound alternates the starter per Q-3 with X starting round 1 per Q-2; resetScore; roundResult returns a plain serializable value for F2). Exhaustive unit tests, including the hard computer never losing over the full opponent move tree in both starting orders. src/ui: App with useReducer(session), a useComputerTurn hook that schedules the computer move after an injected delay and clears it on cleanup, Board as a 3x3 grid of buttons with roving tabindex (arrow keys move focus; Enter/Space place a mark), cell aria-labels ('Row 1, column 2, empty/X/O'), an aria-live polite status region for moves, next turn and result, a mode/difficulty/mark setup panel disabled during a round, Scoreboard, New round and Reset score. theme.ts is the single source of colors, spacing, radii, type and motion, emitted as CSS custom properties with prefers-color-scheme light/dark, prefers-reduced-motion, and a fluid layout down to 360 px with 44 px+ targets. Component tests use user-event keyboard-only play and fake timers.",
+        "risks": [
+          "Reducer must be split into small handlers to stay within complexity 10 and 60 lines per function",
+          "Stale computer-move timer across rounds (F-2)",
+          "Visual polish ('modern, subtle animations') cannot be verified by unit tests; relies on review"
+        ],
+        "feasible": true,
+        "infeasible_reasons": [],
+        "ratings": {
+          "goal_fit": 5.0,
+          "correctness": 5.0,
+          "maintainability": 5.0,
+          "delivery_time": 3.0,
+          "cost": 3.0
+        },
+        "estimated_cost_usd": 5.0,
+        "estimated_minutes": 150.0
+      },
+      {
+        "option_id": "OPT-B",
+        "title": "Rules-only domain + session orchestration in React hooks",
+        "description": "src/domain holds board, winner/draw and the three computer players exactly as in OPT-A (satisfying the domain constraint). Round lifecycle, score counts, starter alternation, mode/difficulty locking and the thinking pause live in a useGameSession hook (useState/useEffect) in src/ui and are verified through jsdom component tests with fake timers. Same accessible grid, live region and theme module as OPT-A. The F2 session result is derived from hook state when needed.",
+        "risks": [
+          "Fairness (Q-3) and lock (Q-5) rules are only testable through slower, timer-dependent component tests",
+          "Multiple useState values allow illegal combinations (a move during computer-thinking, a mode change mid-round), against docs/ENGINEERING.md:10",
+          "The hook is likely to hit the 60-line function limit and need splitting anyway",
+          "The F2 plain session-result value lives in UI state, so F2 must reach into src/ui logic or the code must be refactored into the domain later"
+        ],
+        "feasible": true,
+        "infeasible_reasons": [],
+        "ratings": {
+          "goal_fit": 4.0,
+          "correctness": 3.0,
+          "maintainability": 3.0,
+          "delivery_time": 4.0,
+          "cost": 4.0
+        },
+        "estimated_cost_usd": 4.0,
+        "estimated_minutes": 120.0
+      }
+    ],
+    "selected_option_id": "OPT-A",
+    "spike_requested": null
+  },
+  "policy_digest": "82c39bbd1af449d41608cc17e77c6da2c4e458cc94cb165931ddce8ca1406fb1"
+}

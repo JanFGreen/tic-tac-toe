@@ -1,0 +1,123 @@
+{
+  "verdict": "PASS",
+  "envelope": {
+    "schema_version": "1",
+    "kind": "spec-evaluate",
+    "verdict": "PASS",
+    "summary": "Round 2: both blocking findings from round 1 are fixed. AC-19 now makes easy's randomness and lack of threat awareness observable, and AC-20 (together with the tightened AC-3) requires roving tabindex and arrow-key focus movement. All five dimensions pass and the counterexample is rejected. Three low, non-blocking advisories remain.",
+    "findings": [
+      {
+        "id": "F-1",
+        "severity": "high",
+        "blocking": true,
+        "requirement_ids": [
+          "REQ-5",
+          "REQ-14"
+        ],
+        "location": {
+          "path": "openspec/changes/TTT-F1-GAME/specs/tic-tac-toe-game/spec.md",
+          "line": null
+        },
+        "problem": "Fixed. Round 1 found that an easy player could reuse the medium or minimax algorithm and still pass every criterion. The new AC-19 closes this: (a) with a winning move available, easy must play the randomly selected cell; (b) with a threat on the board, easy must play a non-blocking cell; (c) sweeping the random value must reach every legal cell; and the same sweeps must show that medium and hard behave differently. REQ-5 now has the scenarios 'Easy ignores an available win', 'Easy ignores a threat' and 'Easy can reach every legal cell'. An easy player built on medium or minimax fails (a) and (b), and a biased pick such as 'always the first legal cell' fails (c).",
+        "evidence_ids": [],
+        "expected_fix": "None.",
+        "status": "fixed"
+      },
+      {
+        "id": "F-2",
+        "severity": "high",
+        "blocking": true,
+        "requirement_ids": [
+          "REQ-9"
+        ],
+        "location": {
+          "path": "openspec/changes/TTT-F1-GAME/specs/tic-tac-toe-game/spec.md",
+          "line": null
+        },
+        "problem": "Fixed. Round 1 found that a board with nine tab stops and ignored arrow keys passed every criterion. The new AC-20 requires exactly one cell with tabindex 0, requires that ArrowRight, ArrowLeft, ArrowDown and ArrowUp move DOM focus to the adjacent cell without placing a mark, and defines that focus stays on the edge cell instead of wrapping. AC-3 now fails if any cell after the first is reached by anything other than an arrow key, and it covers New round. REQ-9 adds the scenarios 'Single tab stop' and 'Arrow keys move focus'. A board with nine tab stops or with arrow keys that do nothing now fails.",
+        "evidence_ids": [],
+        "expected_fix": "None.",
+        "status": "fixed"
+      },
+      {
+        "id": "F-3",
+        "severity": "low",
+        "blocking": false,
+        "requirement_ids": [
+          "REQ-6"
+        ],
+        "location": {
+          "path": "openspec/changes/TTT-F1-GAME/specs/tic-tac-toe-game/spec.md",
+          "line": null
+        },
+        "problem": "AC-10 checks only that the board is blocked and that the computer's mark appears after the delay, and only New round as a way to discard the pending move. Two parts of REQ-6 appear only in its scenarios, not in AC-10: that a thinking indication is visible ('Board blocked while thinking') and that Reset score also cancels the pending move ('Stale move discarded'). Because the scenarios are observable, the intent is covered, but the acceptance criterion is narrower than the requirement.",
+        "evidence_ids": [],
+        "expected_fix": "Builder advisory: in the fake-timer test, also assert that a visible thinking indicator is shown during the pause and that Reset score during the pause discards the pending move.",
+        "status": "open"
+      },
+      {
+        "id": "F-4",
+        "severity": "low",
+        "blocking": false,
+        "requirement_ids": [
+          "REQ-9"
+        ],
+        "location": {
+          "path": "openspec/changes/TTT-F1-GAME/acceptance-map.yaml",
+          "line": null
+        },
+        "problem": "The request asks for play by mouse and touch as well as keyboard. No acceptance criterion names pointer input explicitly. Native buttons make this nearly free, and AC-4, AC-5 and AC-12 will in practice use clicks, so this is not a material gap.",
+        "evidence_ids": [],
+        "expected_fix": "Builder advisory: include at least one component test that plays moves by click or pointer (user-event), and keep cells as native buttons so touch activation works.",
+        "status": "open"
+      },
+      {
+        "id": "F-5",
+        "severity": "low",
+        "blocking": false,
+        "requirement_ids": [
+          "REQ-16",
+          "REQ-13"
+        ],
+        "location": {
+          "path": "openspec/changes/TTT-F1-GAME/specs/tic-tac-toe-game/spec.md",
+          "line": null
+        },
+        "problem": "REQ-16 (a serializable round result for F2) is labeled source 'constraint', but none of the feature's constraints asks for it. It is a small addition that supports the next feature, docs/PRODUCT.md:10 describes that feature, and REQ-16 forbids building any server code. REQ-13 (docs/DESIGN.md) goes beyond Q-1, though its theme-module part follows docs/ENGINEERING.md:32. Neither requirement weakens anything the request asks for.",
+        "evidence_ids": [],
+        "expected_fix": "Optional: label REQ-16 and REQ-13 with their real sources (forward-compatibility for F2 and the engineering or design policy) instead of 'constraint' or 'decision:Q-1'.",
+        "status": "open"
+      }
+    ],
+    "checked_criteria": [
+      "Snapshot identity: spec_digest 739f266b… and analysis_round 2 match the request",
+      "Re-derived the intents from the original request and decisions Q-1 to Q-6, then compared them with the intent map: board, modes, difficulties, thinking pause, turn and result display, scoreboard, fair starter, keyboard, mouse and touch, screen reader, 360 px plus light and dark schemes, polish and motion, pure domain, no dependencies",
+      "Previous finding F-1 (easy indistinguishable from medium or hard): resolved by AC-19 and the three new REQ-5 scenarios",
+      "Previous finding F-2 (arrow keys not required): resolved by AC-20 and the strengthened AC-3",
+      "Previous finding (uncovered requirements REQ-5 and REQ-9): both now have observable criteria",
+      "Decisions Q-2 and Q-3 (starter alternation, X first, chosen player mark): AC-8 and REQ-4 scenarios",
+      "Decisions Q-5 and Q-6 (choices locked during a round, score kept when they change): AC-6 and AC-7",
+      "Feature acceptance criteria: AC-1 (hard never loses, both starting orders), AC-2 (8 lines and the draw), AC-3 and AC-20 (keyboard-only round)",
+      "Hidden scope reduction: future_directions is empty, and no criterion is weaker than the request",
+      "Feasibility: the selected OPT-A layout fits docs/ENGINEERING.md limits (complexity ≤ 10, ≤ 60 lines per function, docs/ENGINEERING.md:15) and the single theme module (docs/ENGINEERING.md:32); no new dependencies",
+      "Risk controls: no auth or user data; accessibility (AC-13, AC-14, AC-20), reduced motion (AC-15) and a stale-timer control (AC-10) are present",
+      "Counterexample built and checked against the current criteria"
+    ],
+    "limitations": [
+      "The 'min visual score' threshold in AC-15 comes from controller policy that was not part of the inputs. I assumed the trusted visual-review gate enforces it.",
+      "Previous-round findings arrived without IDs, so I assigned F-1 (easy difficulty) and F-2 (arrow-key navigation) for continuity."
+    ],
+    "payload": {
+      "dimensions": {
+        "intent_coverage": "PASS",
+        "consistency": "PASS",
+        "testability": "PASS",
+        "feasibility": "PASS",
+        "risk_controls": "PASS"
+      },
+      "counterexample": "Candidate wrong implementation: easy delegates to medium's win-then-block logic and falls back to the first legal cell; the board renders nine native buttons, each a tab stop, and ignores arrow keys; the computer move fires from a setTimeout that is not cleared on New round. All of it is rejected. AC-19(a)/(b) fail because easy plays the win or the block instead of the randomly selected cell, and AC-19(c) fails because the sweep never reaches cells other than the first. AC-20 fails because more than one cell has tabindex 0 and arrow keys do not move focus, and AC-3 fails because cells are reached by Tab. AC-10 fails because the stale move appears after New round. One narrower gap remains: the thinking pause has no visible indicator. AC-10 would not catch this, but the REQ-6 'Board blocked while thinking' scenario requires the indicator, so the gap is covered (advisory F-3).",
+      "uncovered_requirements": []
+    }
+  },
+  "controller_problems": []
+}

@@ -1,0 +1,207 @@
+{
+  "verdict": "PASS",
+  "envelope": {
+    "schema_version": "1",
+    "kind": "decomposition-review",
+    "verdict": "PASS",
+    "summary": "The 8-task DAG covers all 16 requirements and has no cycles. Shared contracts (domain types, tokens, components, cell-name) come before the tasks that use them, and file scopes do not overlap. Every leaf has an explicit contract and named checks. Three non-blocking notes are about verification wording and how complete the requirement tags are.",
+    "findings": [
+      {
+        "id": "DR-1",
+        "severity": "medium",
+        "blocking": false,
+        "requirement_ids": [
+          "REQ-13"
+        ],
+        "location": {
+          "path": "openspec/changes/tic-tac-toe-game/tasks.md",
+          "line": null
+        },
+        "problem": "TASK-04, 05, 06, 07 and 08 each state in `acceptance` that their CSS file (base.css, components.css, Board.css, panels.css, App.css) contains no literal color, size or spacing value. No task lists an executable check for this in `verification`. AC-16's planned evidence is only `tokens-usage-review`, so this part of REQ-13 relies on manual review.",
+        "evidence_ids": [],
+        "expected_fix": "Have TASK-04 own one test (for example in src/ui/theme.test.ts or a styles test) that scans every src/ui/**/*.css file for literal values, measured against the allow-list in docs/DESIGN.md. Then name that test in the verification of TASK-05 to TASK-08 so CSS added later is checked automatically.",
+        "status": "open"
+      },
+      {
+        "id": "DR-2",
+        "severity": "low",
+        "blocking": false,
+        "requirement_ids": [
+          "REQ-12",
+          "REQ-13"
+        ],
+        "location": {
+          "path": "openspec/changes/tic-tac-toe-game/tasks.md",
+          "line": null
+        },
+        "problem": "Several tasks do work for requirements they do not list. TASK-07 builds the turn-change transition (part of REQ-12) but its requirement_ids omit REQ-12. TASK-06, 07 and 08 build screens that must use the tokens (REQ-13) but do not list REQ-13. Coverage is still complete through TASK-04, 05 and 06, but the traceability is weaker than it should be.",
+        "evidence_ids": [],
+        "expected_fix": "Add REQ-12 to TASK-07, and add REQ-13 to TASK-06, TASK-07 and TASK-08.",
+        "status": "open"
+      },
+      {
+        "id": "DR-3",
+        "severity": "low",
+        "blocking": false,
+        "requirement_ids": [
+          "REQ-6"
+        ],
+        "location": {
+          "path": "openspec/changes/tic-tac-toe-game/tasks.md",
+          "line": null
+        },
+        "problem": "TASK-08 says the useComputerTurn effect \"depends on roundId and phase\". The effect also reads board, turn, difficulty, random, dispatch and thinkingMs. eslint.config.mjs:2,15 loads eslint-plugin-react-hooks and the project requires zero lint warnings, so declaring only those two dependencies would likely fail `npm run check`.",
+        "evidence_ids": [],
+        "expected_fix": "Reword the contract so the effect declares every value it reads. The roundId guard in the reducer and the timer cleanup already prevent stale moves.",
+        "status": "open"
+      }
+    ],
+    "checked_criteria": [
+      "Digest consistency: plan and spec identity come from the same snapshot (spec_digest 739f266b…, plan_digest 8e96d9ed…); no mismatch was supplied",
+      "Coverage both ways: every one of REQ-1..REQ-16 maps to at least one task with a named verification; every task carries requirement IDs",
+      "DAG integrity: there are no cycles and every depends_on points to an existing task. TASK-01 and TASK-04 are the roots. Critical path: TASK-01 -> TASK-03 -> TASK-07 -> TASK-08 (TASK-04 -> TASK-05/06 feeds into TASK-07)",
+      "Shared contracts come before the tasks that use them: board/lines/difficulty (TASK-01) before computer/session/Board; tokens (TASK-04) before components and screens; cell-name.ts (TASK-06) before RoundStatus (TASK-07)",
+      "parallel_safe_with pairs: no file_scope overlap among any declared parallel pairs (01/04, 01/05, 02/03..07, 03/04..06, 05/06)",
+      "Lockfile and public API: no task touches package.json or the lockfile; src/main.tsx and index.html belong only to TASK-04; src/ui/App.tsx and App.test.tsx belong only to TASK-08 (the placeholder exists at src/ui/App.tsx:4)",
+      "Leaves can be executed: each has explicit output signatures, observable acceptance, named test cases and an estimate of 30-45 minutes",
+      "Difficulty labels match controller_difficulty; there are no easy leaves; the hard leaf TASK-03 has an 'indivisible:' reason that holds up (one discriminated union for the session state and its invariants) and its contract is fully written out",
+      "Over-decomposition: no test-only tasks, no empty file_scope, no pair that one executor would obviously finish together within the target",
+      "Vertical integration: the domain is connected to the UI through component-level tasks and joined in TASK-08; acceptable at this feature's size",
+      "Completeness: no data or migrations in scope; DESIGN.md is created; the error paths (occupied cell, move after the round ends, stale computer move) have tests; the 360 px layout and screenshots are left to the controller's FEATURE_ACCEPTANCE stage",
+      "Future needs: the F2 RoundResult is committed_next and recorded as a constraint on TASK-03 and TASK-08; no hypothetical work is planned",
+      "Limits: 8 leaves (limit 20), depth 1 (limit 3)",
+      "Repo facts: src/domain/.gitkeep, src/main.tsx, index.html and the placeholder App exist; ENGINEERING.md limits (complexity ≤10, ≤60 lines per function) match the eslint config"
+    ],
+    "limitations": [
+      "Findings from round 1 were not supplied, so finding IDs could not be matched to earlier rounds.",
+      "Whether the 360 px layout, the 44 px touch targets and the visual quality are met cannot be checked from the plan; they rely on the screenshot evidence at FEATURE_ACCEPTANCE.",
+      "Whether a tool is configured for the reduced-motion and contrast checks beyond the planned theme.test was not checked."
+    ],
+    "payload": {
+      "requirements_map": {
+        "REQ-1": [
+          "TASK-01",
+          "TASK-03",
+          "TASK-06",
+          "TASK-08"
+        ],
+        "REQ-2": [
+          "TASK-01"
+        ],
+        "REQ-3": [
+          "TASK-03",
+          "TASK-07",
+          "TASK-08"
+        ],
+        "REQ-4": [
+          "TASK-03",
+          "TASK-08"
+        ],
+        "REQ-5": [
+          "TASK-02"
+        ],
+        "REQ-6": [
+          "TASK-03",
+          "TASK-08"
+        ],
+        "REQ-7": [
+          "TASK-07",
+          "TASK-08"
+        ],
+        "REQ-8": [
+          "TASK-03",
+          "TASK-07",
+          "TASK-08"
+        ],
+        "REQ-9": [
+          "TASK-05",
+          "TASK-06",
+          "TASK-08"
+        ],
+        "REQ-10": [
+          "TASK-06",
+          "TASK-07"
+        ],
+        "REQ-11": [
+          "TASK-04",
+          "TASK-05",
+          "TASK-08"
+        ],
+        "REQ-12": [
+          "TASK-04",
+          "TASK-06"
+        ],
+        "REQ-13": [
+          "TASK-04",
+          "TASK-05"
+        ],
+        "REQ-14": [
+          "TASK-01",
+          "TASK-02",
+          "TASK-03"
+        ],
+        "REQ-15": [
+          "TASK-08"
+        ],
+        "REQ-16": [
+          "TASK-03"
+        ]
+      },
+      "per_task": [
+        {
+          "task_id": "TASK-01",
+          "verdict": "PASS",
+          "notes": "Clear domain contract; tests for all 8 lines, draw, occupied cell and move after round end."
+        },
+        {
+          "task_id": "TASK-02",
+          "verdict": "PASS",
+          "notes": "The three strategies follow Q-4; AC-1, AC-9 and AC-19 are each mapped to a named test; exhaustive check in both starting orders."
+        },
+        {
+          "task_id": "TASK-03",
+          "verdict": "PASS",
+          "notes": "Hard leaf with a convincing 'indivisible:' reason; full action and transition contract; covers starter alternation, locking, stale roundId and JSON round trip."
+        },
+        {
+          "task_id": "TASK-04",
+          "verdict": "PASS",
+          "notes": "DESIGN.md and tokens come before any screen; contrast and reduced-motion are tested. See DR-1 for the CSS literal check."
+        },
+        {
+          "task_id": "TASK-05",
+          "verdict": "PASS",
+          "notes": "Small shared component contract with keyboard and disabled-state tests."
+        },
+        {
+          "task_id": "TASK-06",
+          "verdict": "PASS",
+          "notes": "Roving tabindex, no wrap at edges, aria-disabled and cell names are all in AC-20 and AC-13 tests."
+        },
+        {
+          "task_id": "TASK-07",
+          "verdict": "PASS",
+          "notes": "Props-only screens; live region and status text tested. See DR-2 for the missing REQ-12 tag."
+        },
+        {
+          "task_id": "TASK-08",
+          "verdict": "PASS",
+          "notes": "Integration task with keyboard-only round, fake-timer pause and stale-move tests. See DR-3 for the hook's dependency wording."
+        }
+      ],
+      "dag_ok": true
+    }
+  },
+  "dag_problems": [],
+  "order": [
+    "TASK-01",
+    "TASK-02",
+    "TASK-03",
+    "TASK-04",
+    "TASK-05",
+    "TASK-06",
+    "TASK-07",
+    "TASK-08"
+  ],
+  "controller_problems": []
+}

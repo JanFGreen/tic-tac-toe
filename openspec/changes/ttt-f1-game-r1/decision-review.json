@@ -1,0 +1,108 @@
+{
+  "schema_version": "1",
+  "kind": "options-review",
+  "verdict": "PASS",
+  "summary": "Drafted two genuinely different, feasible options (session state machine in src/domain vs. session orchestration in React hooks) and recommend OPT-A: it keeps round/score/starter/lock rules pure and unit-testable, makes illegal states unrepresentable per docs/ENGINEERING.md, and yields the plain session-result value the committed_next F2 needs.",
+  "findings": [
+    {
+      "id": "F-1",
+      "severity": "low",
+      "blocking": false,
+      "requirement_ids": [
+        "AC-1"
+      ],
+      "location": null,
+      "problem": "Acceptance criterion 'The hard computer never loses from any position reachable in a game' is ambiguous. Some legally reachable positions are already lost for the side to move (for example, the opponent holds two open lines), so the literal reading cannot be satisfied by any option. Both options assume the intended reading: any position reachable in a game where the hard computer plays its moves.",
+      "evidence_ids": [],
+      "expected_fix": "factory-spec-author/spec-evaluate should state the testable form: for every sequence of opponent moves, with the hard computer starting or moving second, the game ends in a computer win or a draw. Verify it with an exhaustive domain test that enumerates the opponent's move tree.",
+      "status": "open"
+    },
+    {
+      "id": "F-2",
+      "severity": "low",
+      "blocking": false,
+      "requirement_ids": [
+        "AC-10",
+        "AC-5"
+      ],
+      "location": {
+        "path": "src/ui/App.tsx",
+        "line": null
+      },
+      "problem": "OPT-A and OPT-B both rely on a UI timer for the visible 'thinking' pause. A timer that is not cancelled on New round, Reset score or unmount can apply a stale computer move to the next round, which would break 'no further cell can be marked until a new round starts' and the turn indicator. React 19 StrictMode in src/main.tsx:8 double-invokes effects, so cleanup must be correct.",
+      "evidence_ids": [],
+      "expected_fix": "Whichever option is chosen, the pause delay must be injected and the timer cleared in the effect cleanup. In OPT-A, also ignore a computer move whose round id does not match the current round. Add a component test with fake timers that presses New round during the pause.",
+      "status": "open"
+    }
+  ],
+  "checked_criteria": [
+    "Option count meets policy minimum (2 options for a standard/complex path; 2 drafted)",
+    "Options are materially different: where session/round/score/starter/lock state lives (domain state machine vs React hooks)",
+    "Neither option is a straw man: keeping session state in React hooks is a common, reasonable choice",
+    "Hard constraint 'game rules are pure functions in src/domain with unit tests': both options put board, winner/draw, legal moves and the easy/medium/hard computer in src/domain (docs/ARCHITECTURE.md:5, eslint.config.mjs:25-33)",
+    "Hard constraint 'no new dependencies; static Vite build': both use only react 19.3, react-dom, Vite CSS, Testing Library and user-event already in package.json:20-46",
+    "UI layer constraint: React in src/ui with English text (AGENTS.md, docs/PRODUCT.md:12); ui must not import server (eslint.config.mjs:35-40)",
+    "Lint limits (complexity <=10, <=60 lines per function, <=300 lines per file; eslint.config.mjs:48-58) are achievable in both if the reducer/components are split per concern",
+    "Theme rule: visual values come from one theme module (docs/ENGINEERING.md:32); both options use a single theme module with CSS custom properties, light/dark via prefers-color-scheme",
+    "Randomness and time are injected (docs/ARCHITECTURE.md:14) for easy/medium move choice and the thinking pause",
+    "Q-1..Q-6 decisions covered: player chooses mark, X starts round 1, starter alternates including after draws, Q-4 AI behaviors, mode/difficulty locked during a round, score kept across mode changes",
+    "committed_next F2: session result recorded as a plain value with no server code (OPT-A natively; OPT-B only via a derived value from hook state)",
+    "No hidden scope reduction: every intake acceptance criterion (1-16) is in scope of both options",
+    "Ratings derived from estimates (OPT-A 150 min / $5.0, OPT-B 120 min / $4.0); recommendation computed with equal weights"
+  ],
+  "limitations": [
+    "Selection policy weights and tie-break were not provided in <inputs>; the recommendation uses equal weights (OPT-A 4.2 vs OPT-B 3.6). With any weighting that does not heavily favor cost/delivery_time, OPT-A remains ahead.",
+    "No spec draft (proposal.md/specs/**) was provided in <inputs>, so options were checked against the feature snapshot and intake acceptance criteria only.",
+    "Read-only run: no commands were executed, so the feasibility of the lint limits and of the jsdom keyboard tests was judged from configuration files, not from a trial build.",
+    "Time and cost estimates are planner estimates, not measurements."
+  ],
+  "payload": {
+    "options": [
+      {
+        "option_id": "OPT-A",
+        "title": "Pure session state machine in src/domain + thin React shell",
+        "description": "src/domain: board.ts (readonly 9-cell tuple, legal moves, applyMove returning a typed result that rejects occupied cells and finished rounds), lines.ts (8 winning lines, winner/draw with the winning line), computer.ts (easy: random legal move from an injected random; medium: win, else block, else random; hard: minimax with alpha-beta and depth-adjusted scores), session.ts (pure reducer over a discriminated union: phase 'playing' | 'computer-thinking' | 'over'; mode/difficulty/player mark locked while a round is not over; newRound alternates the starter per Q-3 with X starting round 1 per Q-2; resetScore; roundResult returns a plain serializable value for F2). Exhaustive unit tests, including the hard computer never losing over the full opponent move tree in both starting orders. src/ui: App with useReducer(session), a useComputerTurn hook that schedules the computer move after an injected delay and clears it on cleanup, Board as a 3x3 grid of buttons with roving tabindex (arrow keys move focus; Enter/Space place a mark), cell aria-labels ('Row 1, column 2, empty/X/O'), an aria-live polite status region for moves, next turn and result, a mode/difficulty/mark setup panel disabled during a round, Scoreboard, New round and Reset score. theme.ts is the single source of colors, spacing, radii, type and motion, emitted as CSS custom properties with prefers-color-scheme light/dark, prefers-reduced-motion, and a fluid layout down to 360 px with 44 px+ targets. Component tests use user-event keyboard-only play and fake timers.",
+        "feasible": true,
+        "infeasible_reasons": [],
+        "ratings": {
+          "goal_fit": 5,
+          "correctness": 5,
+          "maintainability": 5,
+          "delivery_time": 3,
+          "cost": 3
+        },
+        "estimated_cost_usd": 5,
+        "estimated_minutes": 150,
+        "risks": [
+          "Reducer must be split into small handlers to stay within complexity 10 and 60 lines per function",
+          "Stale computer-move timer across rounds (F-2)",
+          "Visual polish ('modern, subtle animations') cannot be verified by unit tests; relies on review"
+        ]
+      },
+      {
+        "option_id": "OPT-B",
+        "title": "Rules-only domain + session orchestration in React hooks",
+        "description": "src/domain holds board, winner/draw and the three computer players exactly as in OPT-A (satisfying the domain constraint). Round lifecycle, score counts, starter alternation, mode/difficulty locking and the thinking pause live in a useGameSession hook (useState/useEffect) in src/ui and are verified through jsdom component tests with fake timers. Same accessible grid, live region and theme module as OPT-A. The F2 session result is derived from hook state when needed.",
+        "feasible": true,
+        "infeasible_reasons": [],
+        "ratings": {
+          "goal_fit": 4,
+          "correctness": 3,
+          "maintainability": 3,
+          "delivery_time": 4,
+          "cost": 4
+        },
+        "estimated_cost_usd": 4,
+        "estimated_minutes": 120,
+        "risks": [
+          "Fairness (Q-3) and lock (Q-5) rules are only testable through slower, timer-dependent component tests",
+          "Multiple useState values allow illegal combinations (a move during computer-thinking, a mode change mid-round), against docs/ENGINEERING.md:10",
+          "The hook is likely to hit the 60-line function limit and need splitting anyway",
+          "The F2 plain session-result value lives in UI state, so F2 must reach into src/ui logic or the code must be refactored into the domain later"
+        ]
+      }
+    ],
+    "selected_option_id": "OPT-A",
+    "spike_requested": null
+  }
+}
