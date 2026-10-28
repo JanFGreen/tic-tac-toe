@@ -1,0 +1,106 @@
+{
+  "verdict": "PASS",
+  "envelope": {
+    "schema_version": "1",
+    "kind": "spec-evaluate",
+    "verdict": "PASS",
+    "summary": "Round 2: both blocking findings from round 1 are fixed. REQ-4/AC-14 now make the socket address the rate-limit key by default, and REQ-9/AC-15 now require a confirmation before Reset score discards a pending result. All five dimensions pass, and the counterexample is rejected or only uses behavior the request does not cover. Two non-blocking advisories are left for the builder.",
+    "findings": [
+      {
+        "id": "F-1",
+        "severity": "high",
+        "blocking": true,
+        "requirement_ids": [
+          "REQ-4"
+        ],
+        "location": {
+          "path": "specs/leaderboard/spec.md",
+          "line": null
+        },
+        "problem": "Fixed in round 2. REQ-4 now says the key is the socket address and that X-Forwarded-For is ignored unless trustProxy is explicitly configured (default off). It has a 'Forged forwarding header' scenario. AC-14 requires 429 on the 11th save from one socket address, even when every request carries a different X-Forwarded-For value, with only 10 stored results. design.md keeps trustProxy off by default. This matches current code: src/server/app.ts:5 calls Fastify({ logger: false }) with no trustProxy. The round-1 counterexample (trustProxy: true) now fails AC-14.",
+        "evidence_ids": [],
+        "expected_fix": "None; resolved.",
+        "status": "fixed"
+      },
+      {
+        "id": "F-2",
+        "severity": "high",
+        "blocking": true,
+        "requirement_ids": [
+          "REQ-9"
+        ],
+        "location": {
+          "path": "specs/leaderboard/spec.md",
+          "line": null
+        },
+        "problem": "Fixed in round 2. REQ-9 now covers every action that would discard the finished round: New round and Reset score. It has declined, confirmed and no-pending Reset score scenarios, and AC-15 makes them observable. In the repo, Reset score always renders (src/ui/App.tsx:54-61) and resetScore replaces the round (src/domain/session.ts:131-133). Those are the only two discarding actions. changeSettings only changes settings and leaves round.result alone (src/domain/session.ts:82-85). The round-1 counterexample now fails AC-15.",
+        "evidence_ids": [],
+        "expected_fix": "None; resolved.",
+        "status": "fixed"
+      },
+      {
+        "id": "F-3",
+        "severity": "medium",
+        "blocking": false,
+        "requirement_ids": [
+          "REQ-1",
+          "REQ-9"
+        ],
+        "location": {
+          "path": "specs/leaderboard/spec.md",
+          "line": null
+        },
+        "problem": "Advisory. When a round is over, settings are unlocked (src/domain/session.ts:69-71, 82-85), so the player can switch difficulty while a result is pending. If the save form reads difficulty from session.settings instead of round.result.difficulty (src/domain/session.ts:20-25, 64), a Hard win can be saved as Easy. No AC pins which difficulty is sent. A related risk: if the pending or saved flag is local state of a component that unmounts when the leaderboard screen opens, the pending result can be lost or saved twice. AC-8 checks only that the board and score are unchanged.",
+        "evidence_ids": [],
+        "expected_fix": "Builder: take difficulty and outcome from round.result (the domain outcome mapping), not from current settings. Keep the pending and saved state in App or a hook that survives opening the leaderboard, and add a test for each case.",
+        "status": "open"
+      },
+      {
+        "id": "F-4",
+        "severity": "low",
+        "blocking": false,
+        "requirement_ids": [
+          "REQ-7"
+        ],
+        "location": {
+          "path": ".gitignore",
+          "line": 11
+        },
+        "problem": "Advisory. .gitignore currently ignores data/*.db, *.sqlite and similar patterns, but not the whole data/ directory. AC-9 requires 'data/ is ignored by git', and proposal.md says data/ is excluded. A database file name that matches none of these patterns (e.g. data/results) would be committed.",
+        "evidence_ids": [],
+        "expected_fix": "Builder: add 'data/' to .gitignore and check it with git check-ignore in the planned gitignore-check evidence.",
+        "status": "open"
+      }
+    ],
+    "checked_criteria": [
+      "Snapshot identity: spec_digest in the request and in inputs match (77c1f7b7...); analysis_round 2",
+      "Re-derived the intents from the original request (save under nickname, remembered nickname, per-difficulty leaderboard with W/D/L best first, own screen reachable from game, input validation, size limits, write rate limit, no trust in client, SQLite file under data/ surviving restart, offline play with explanation and retry) and found each covered by REQ-1..REQ-9 with ACs",
+      "Accepted decisions Q-1..Q-7 all appear in requirements: Q-1 ordering in REQ-5/AC-6; Q-2 nickname rule in REQ-3/AC-3; Q-3 case-insensitive grouping in AC-6; Q-4 self-report plus one save per round in REQ-9/AC-11; Q-5 10/min/IP in AC-5/AC-14; Q-6 top 20 in AC-6; Q-7 pending plus confirmation in AC-11/AC-15",
+      "Constraints: buildApp() testable with inject and an injected store (REQ-10/AC-12); storage through one module (REQ-7/AC-9); no new dependencies, with package.json declaring fastify 5.12.7, @fastify/rate-limit 11.2.1 and zod 4.6.7",
+      "Previous finding F-1 (rate-limit key forgeable through forwarding headers) verified resolved: REQ-4, AC-14, design.md, src/server/app.ts:5",
+      "Previous finding F-2 (Reset score drops pending result) verified resolved: REQ-9, AC-15, src/ui/App.tsx:54-61, src/domain/session.ts:131-133",
+      "Hidden scope reduction: future-needs.md lists only accounts, two-player leaderboard, self-delete, and the round token deferred by accepted Q-4; nothing the request asks for is deferred",
+      "Consistency: no conflict between REQ-5 ordering and design SQL (ORDER BY wins DESC, losses ASC, nickname_key ASC LIMIT 20); no baseline spec is modified",
+      "Testability: every AC names an observable result (HTTP status, stored rows, rendered message or control), including error, empty and boundary cases (17 characters, 11th save, 25 players, 413)",
+      "Feasibility: the stylesheet scan reads src/ui recursively (src/stylesheets.test.ts:64-65), so new CSS is covered; session already carries RoundResult with difficulty and playerMark for the outcome mapping (src/domain/session.ts:19-25)",
+      "Risk controls: input validation, body limit, write rate limit with a key the client cannot forge, server trusts only nickname/difficulty/outcome, bound SQL parameters, and design/a11y (44 px, tokens) criteria",
+      "Counterexamples tried: trustProxy on (fails AC-14), confirmation only on New round (fails AC-15), filtering top 20 on the client (fails AC-6, which tests the API), separate rows for 'Ann' and 'ann' (fails AC-6), rate-limiting GET too (fails the REQ-4 reads scenario)"
+    ],
+    "limitations": [
+      "node_modules is not present in the worktree (gitignored link), so the @fastify/rate-limit and node:sqlite type definitions could not be read. Feasibility rests on the package.json declarations and on AGENTS.md naming Node 24 node:sqlite as available.",
+      "Read-only evaluation: no tests or commands were run."
+    ],
+    "payload": {
+      "dimensions": {
+        "intent_coverage": "PASS",
+        "consistency": "PASS",
+        "testability": "PASS",
+        "feasibility": "PASS",
+        "risk_controls": "PASS"
+      },
+      "counterexample": "Simplest wrong implementations tried. (1) buildApp creates Fastify with trustProxy: true, so each forged X-Forwarded-For gets a fresh bucket: rejected by AC-14. (2) Confirmation only on New round, while Reset score silently clears the pending result: rejected by AC-15. (3) The API returns all rows and the client sorts and slices to 20: rejected by AC-6, which checks GET /api/leaderboard directly. (4) Grouping by exact nickname: rejected by AC-6 ('Ann' and 'ann' are one player). Remaining gap, outside explicit criteria and non-blocking (F-3): the save sends the current settings difficulty instead of the finished round's difficulty after the player changes difficulty while the result is pending. This is a correctness edge case the request does not name, and it is forwarded to the builder as an advisory.",
+      "uncovered_requirements": []
+    }
+  },
+  "controller_problems": []
+}

@@ -1,0 +1,89 @@
+criteria:
+- id: AC-1
+  observable: After a win, loss or draw against the computer a save form appears;
+    submitting an empty nickname does not send a request and shows a message.
+  requirement_ids:
+  - REQ-1
+- id: AC-2
+  observable: After a successful save and a page reload, the next save form shows
+    the same nickname, and typing another nickname saves under that one.
+  requirement_ids:
+  - REQ-2
+- id: AC-3
+  observable: POST /api/results with a missing, empty, 17-character or malformed nickname,
+    an unknown difficulty, an outcome other than win|loss|draw, or an extra field
+    returns 400 and the store is unchanged.
+  requirement_ids:
+  - REQ-3
+- id: AC-4
+  observable: A POST body over the route body limit returns 413 before parsing and
+    the store is unchanged.
+  requirement_ids:
+  - REQ-3
+- id: AC-5
+  observable: The 11th save within a minute from one IP returns 429 with a 'too many
+    saves, try again later' message and the stored results are unchanged.
+  requirement_ids:
+  - REQ-4
+- id: AC-6
+  observable: GET /api/leaderboard?difficulty=easy returns at most 20 entries ordered
+    by wins desc, losses asc, nickname asc, each with wins, draws and losses; 'Ann'
+    and 'ann' appear as one player.
+  requirement_ids:
+  - REQ-5
+- id: AC-7
+  observable: A difficulty with no results returns an empty list; an invalid or missing
+    difficulty returns 400.
+  requirement_ids:
+  - REQ-5
+- id: AC-8
+  observable: A leaderboard control in the game opens the leaderboard screen with
+    Easy, Medium and Hard views, an empty-state message when there are no results,
+    and one back control that returns to the game.
+  requirement_ids:
+  - REQ-6
+- id: AC-9
+  observable: Results saved, then the app and store reopened on the same file, are
+    still listed; the database path is under data/ and data/ is ignored by git; route
+    modules contain no SQLite calls.
+  requirement_ids:
+  - REQ-7
+- id: AC-10
+  observable: With fetch failing, the board and scoreboard still work and save and
+    leaderboard show a 'cannot reach the server' message with a Retry button that
+    succeeds once fetch works.
+  requirement_ids:
+  - REQ-8
+- id: AC-11
+  observable: A failed save keeps the result pending; New round while pending asks
+    for confirmation and discards only when the player confirms; a saved round cannot
+    be saved twice.
+  requirement_ids:
+  - REQ-9
+- id: AC-12
+  observable: All routes are exercised through buildApp({ store }).inject with an
+    in-memory store; package.json and the lockfile are unchanged; src/domain imports
+    nothing from React, Fastify or node:sqlite.
+  requirement_ids:
+  - REQ-10
+  - REQ-12
+- id: AC-13
+  observable: The stylesheet scan test passes for the new CSS files, and the new screens
+    use the shared Button and Panel components with 44 px targets and English copy
+    without exclamation marks.
+  requirement_ids:
+  - REQ-11
+- id: AC-14
+  observable: With buildApp() defaults, 11 valid saves from the same socket address,
+    each with a different X-Forwarded-For header, still produce 429 on the 11th and
+    only 10 stored results. Forwarding headers are honored only when trustProxy is
+    explicitly configured.
+  requirement_ids:
+  - REQ-4
+- id: AC-15
+  observable: With a finished round whose result is pending, activating Reset score
+    asks for confirmation; declining keeps the round, the score and the pending result,
+    and confirming discards the pending result and resets. With no pending result
+    (or after a successful save) Reset score acts without a prompt.
+  requirement_ids:
+  - REQ-9

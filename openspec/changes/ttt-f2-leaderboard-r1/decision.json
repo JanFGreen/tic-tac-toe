@@ -1,0 +1,63 @@
+{
+  "selection": {
+    "selected_option_id": "OPT-A",
+    "scores": {
+      "OPT-A": 0.95,
+      "OPT-B": 0.86
+    },
+    "rejected": {},
+    "near_tie": false,
+    "notes": []
+  },
+  "selected_option_id": "OPT-A",
+  "options": {
+    "options": [
+      {
+        "option_id": "OPT-A",
+        "title": "Per-result rows in SQLite, leaderboard aggregated at read",
+        "description": "src/server/results-store.ts opens a node:sqlite DatabaseSync (file under data/ from main.ts, ':memory:' in tests) and exposes saveResult/leaderboard; buildApp({ store }) receives it. Table results(id, nickname_key, nickname, difficulty, outcome, created_at) with an index on (difficulty, nickname_key). The leaderboard is one bound-parameter query per difficulty: GROUP BY nickname_key with SUM(CASE outcome ...), ORDER BY wins DESC, losses ASC, nickname_key ASC LIMIT 20. POST /api/results: zod schema {nickname (trimmed, 1-16 of [A-Za-z0-9 _-]), difficulty enum, outcome win|loss|draw}, strict object, route bodyLimit about 1 KB, @fastify/rate-limit registered with global:false and per-route max 10 / 1 minute plus a 'too many saves' error body. GET /api/leaderboard?difficulty= validated with zod. Client: one src/ui API module (fetch injected for tests) returning typed results (ok | unreachable | rejected | rate-limited), a LeaderboardScreen switched by App state with a back control, a save form pre-filled from localStorage, and a pending-result hook with retry and confirm-on-new-round. src/domain gets a pure player-outcome mapping and the nickname rule shared by client and server.",
+        "risks": [
+          "Row count grows with every accepted save; bounded only by the rate limit (and distributed clients). Acceptable at friends scale with the index.",
+          "Rate-limit key depends on trustProxy and deployment (F-1).",
+          "Display spelling for case-insensitive groups must be specified (F-2)."
+        ],
+        "feasible": true,
+        "infeasible_reasons": [],
+        "ratings": {
+          "goal_fit": 5.0,
+          "correctness": 5.0,
+          "maintainability": 5.0,
+          "delivery_time": 4.0,
+          "cost": 4.0
+        },
+        "estimated_cost_usd": 6.0,
+        "estimated_minutes": 180.0
+      },
+      {
+        "option_id": "OPT-B",
+        "title": "Per-player counters upserted at write",
+        "description": "Same store module, API boundary, rate limit, body limit and client as OPT-A, but the table is player_scores(nickname_key, difficulty, nickname, wins, draws, losses, PRIMARY KEY(nickname_key, difficulty)). Each save is INSERT ... ON CONFLICT(nickname_key, difficulty) DO UPDATE SET <counter> = <counter> + 1, nickname = excluded.nickname. The leaderboard is a plain indexed SELECT ... ORDER BY wins DESC, losses ASC, nickname_key ASC LIMIT 20.",
+        "risks": [
+          "No per-result history: a miscounting bug cannot be repaired by recomputation, and the hypothetical 'delete own results' direction would need a schema change.",
+          "Counter column chosen per outcome means building the SQL from an allow-listed column map; this needs care so it stays parameter-safe.",
+          "Displayed nickname casing follows the last writer (F-2).",
+          "Storage is not actually bounded against abuse, because new nicknames create new rows."
+        ],
+        "feasible": true,
+        "infeasible_reasons": [],
+        "ratings": {
+          "goal_fit": 5.0,
+          "correctness": 4.0,
+          "maintainability": 4.0,
+          "delivery_time": 4.0,
+          "cost": 4.0
+        },
+        "estimated_cost_usd": 6.0,
+        "estimated_minutes": 185.0
+      }
+    ],
+    "selected_option_id": "OPT-A",
+    "spike_requested": null
+  },
+  "policy_digest": "82c39bbd1af449d41608cc17e77c6da2c4e458cc94cb165931ddce8ca1406fb1"
+}

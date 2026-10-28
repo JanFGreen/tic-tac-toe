@@ -1,0 +1,119 @@
+{
+  "schema_version": "1",
+  "kind": "options-review",
+  "verdict": "PASS",
+  "summary": "Drafted two genuinely different, feasible storage/aggregation options (OPT-A per-result rows aggregated at read; OPT-B per-player counters upserted at write) sharing the same validated, rate-limited Fastify boundary and client design; OPT-A is recommended because it is never worse than OPT-B on any criterion and keeps totals reproducible from raw results.",
+  "findings": [
+    {
+      "id": "F-1",
+      "severity": "medium",
+      "blocking": false,
+      "requirement_ids": [
+        "Q-5"
+      ],
+      "location": {
+        "path": "src/server/main.ts",
+        "line": 5
+      },
+      "problem": "Both options key the write rate limit by request.ip (@fastify/rate-limit 11.2.1, per-route config; node_modules/@fastify/rate-limit/types/index.d.ts:115-154). main.ts listens on 127.0.0.1, which implies a reverse proxy when exposed to the internet; without trustProxy every client would share one IP and therefore one 10/min budget, while blindly trusting X-Forwarded-For would let clients spoof their key.",
+      "evidence_ids": [],
+      "expected_fix": "The spec should state the deployment assumption (direct vs behind one trusted proxy) and configure trustProxy accordingly in buildApp options, with an inject test for the 429 path.",
+      "status": "open"
+    },
+    {
+      "id": "F-2",
+      "severity": "low",
+      "blocking": false,
+      "requirement_ids": [
+        "Q-3"
+      ],
+      "location": null,
+      "problem": "Case-insensitive grouping (Q-3) leaves the displayed spelling undefined when the same nickname is saved with different casing. Under OPT-A it is a query choice; under OPT-B the stored display name drifts with the last writer.",
+      "evidence_ids": [],
+      "expected_fix": "Spec names a deterministic display rule (e.g. the spelling of the most recent save) and a test covering mixed-case saves.",
+      "status": "open"
+    },
+    {
+      "id": "F-3",
+      "severity": "low",
+      "blocking": false,
+      "requirement_ids": [],
+      "location": {
+        "path": "src/domain/session.ts",
+        "line": 20
+      },
+      "problem": "RoundResult.outcome is a Mark or 'draw' (session.ts:20-25), not win/loss/draw from the player's view, and eslint.config.mjs:36-44 forbids ui<->server imports. Both options therefore need a pure mapping (outcome + playerMark -> win/loss/draw) and the shared nickname rule placed in src/domain so client and server agree. The pending-result confirmation (Q-7) is new UI state that should not leak into the pure session reducer unless modelled as domain state.",
+      "evidence_ids": [],
+      "expected_fix": "Plan a small pure src/domain module (player outcome mapping, nickname normalisation constants) with tests; keep pending-result and network state in a src/ui hook.",
+      "status": "open"
+    }
+  ],
+  "checked_criteria": [
+    "Option count meets minimum_options=2 with materially different data models (row-per-result aggregated on read vs counter upsert on write)",
+    "Neither option is a straw man: counter tables (OPT-B) are a common, reasonable choice",
+    "Constraint 'buildApp() testable with inject': buildApp currently takes no args (src/server/app.ts:4); both options inject the store, in-memory DB in tests",
+    "Constraint 'storage through one module': both options isolate node:sqlite in one src/server module; node:sqlite is allowed in src/server and banned in src/domain/src/ui (eslint.config.mjs:29,38)",
+    "Constraint 'no new dependencies': @fastify/rate-limit 11.2.1, fastify 5.12.7 and zod 4.6.7 are in package.json:20-25; rate-limit installed (node_modules/@fastify/rate-limit/package.json) with per-route/global:false support; DatabaseSync present in @types/node sqlite.d.ts:292",
+    "Constraint 'data/ not committed': .gitignore:11-15 ignores data/*.db and *.db/*.sqlite",
+    "Security: zod at the boundary, per-route bodyLimit, bound SQL parameters, 10/min/IP write limit (Q-5), self-reported outcomes accepted per Q-4",
+    "Leaderboard ordering wins desc, losses asc, nickname (Q-1) and top 20 (Q-6) expressible in a single SQL query (OPT-A) or ORDER BY on counters (OPT-B)",
+    "Offline behaviour and pending result (Q-7) handled in a src/ui client module + hook in both options; game board/scoreboard do not depend on the API (src/ui/App.tsx)",
+    "Scope: neither option builds hypothetical future directions (accounts, two-player leaderboard, deletion) or round tokens (deferred by Q-4)",
+    "Ratings: OPT-A >= OPT-B on every criterion, so the recommendation is independent of the selection weights"
+  ],
+  "limitations": [
+    "Selection policy weights and tie-break were not included in <inputs>; the recommendation relies on OPT-A dominating OPT-B on every criterion rather than a weighted computation.",
+    "Estimates (minutes, USD) are judgement-based for a single build agent, not measured; remaining feature budget was not provided.",
+    "docs/DESIGN.md, docs/PRODUCT.md, vite.config.ts and vitest.config.mts were not read; the /api dev proxy is taken from AGENTS.md.",
+    "Read-only run: no commands, typecheck or tests were executed."
+  ],
+  "payload": {
+    "options": [
+      {
+        "option_id": "OPT-A",
+        "title": "Per-result rows in SQLite, leaderboard aggregated at read",
+        "description": "src/server/results-store.ts opens a node:sqlite DatabaseSync (file under data/ from main.ts, ':memory:' in tests) and exposes saveResult/leaderboard; buildApp({ store }) receives it. Table results(id, nickname_key, nickname, difficulty, outcome, created_at) with an index on (difficulty, nickname_key). The leaderboard is one bound-parameter query per difficulty: GROUP BY nickname_key with SUM(CASE outcome ...), ORDER BY wins DESC, losses ASC, nickname_key ASC LIMIT 20. POST /api/results: zod schema {nickname (trimmed, 1-16 of [A-Za-z0-9 _-]), difficulty enum, outcome win|loss|draw}, strict object, route bodyLimit about 1 KB, @fastify/rate-limit registered with global:false and per-route max 10 / 1 minute plus a 'too many saves' error body. GET /api/leaderboard?difficulty= validated with zod. Client: one src/ui API module (fetch injected for tests) returning typed results (ok | unreachable | rejected | rate-limited), a LeaderboardScreen switched by App state with a back control, a save form pre-filled from localStorage, and a pending-result hook with retry and confirm-on-new-round. src/domain gets a pure player-outcome mapping and the nickname rule shared by client and server.",
+        "feasible": true,
+        "infeasible_reasons": [],
+        "ratings": {
+          "goal_fit": 5,
+          "correctness": 5,
+          "maintainability": 5,
+          "delivery_time": 4,
+          "cost": 4
+        },
+        "risks": [
+          "Row count grows with every accepted save; bounded only by the rate limit (and distributed clients). Acceptable at friends scale with the index.",
+          "Rate-limit key depends on trustProxy and deployment (F-1).",
+          "Display spelling for case-insensitive groups must be specified (F-2)."
+        ],
+        "estimated_cost_usd": 6,
+        "estimated_minutes": 180
+      },
+      {
+        "option_id": "OPT-B",
+        "title": "Per-player counters upserted at write",
+        "description": "Same store module, API boundary, rate limit, body limit and client as OPT-A, but the table is player_scores(nickname_key, difficulty, nickname, wins, draws, losses, PRIMARY KEY(nickname_key, difficulty)). Each save is INSERT ... ON CONFLICT(nickname_key, difficulty) DO UPDATE SET <counter> = <counter> + 1, nickname = excluded.nickname. The leaderboard is a plain indexed SELECT ... ORDER BY wins DESC, losses ASC, nickname_key ASC LIMIT 20.",
+        "feasible": true,
+        "infeasible_reasons": [],
+        "ratings": {
+          "goal_fit": 5,
+          "correctness": 4,
+          "maintainability": 4,
+          "delivery_time": 4,
+          "cost": 4
+        },
+        "risks": [
+          "No per-result history: a miscounting bug cannot be repaired by recomputation, and the hypothetical 'delete own results' direction would need a schema change.",
+          "Counter column chosen per outcome means building the SQL from an allow-listed column map; this needs care so it stays parameter-safe.",
+          "Displayed nickname casing follows the last writer (F-2).",
+          "Storage is not actually bounded against abuse, because new nicknames create new rows."
+        ],
+        "estimated_cost_usd": 6,
+        "estimated_minutes": 185
+      }
+    ],
+    "selected_option_id": "OPT-A",
+    "spike_requested": null
+  }
+}

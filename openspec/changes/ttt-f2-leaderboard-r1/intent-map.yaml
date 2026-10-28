@@ -1,0 +1,35 @@
+links:
+- intent: save a result against the computer under a nickname
+  requirement_ids:
+  - REQ-1
+  - REQ-9
+  - REQ-12
+- intent: nickname remembered on the device
+  requirement_ids:
+  - REQ-2
+- intent: server stores results and serves a leaderboard per difficulty with wins,
+    draws and losses, best first
+  requirement_ids:
+  - REQ-5
+  - REQ-7
+- intent: client shows the leaderboard on its own screen reachable from the game
+  requirement_ids:
+  - REQ-6
+  - REQ-11
+- intent: 'API safe to expose: validation, size limits, write rate limit, no trust
+    in client'
+  requirement_ids:
+  - REQ-3
+  - REQ-4
+  - REQ-9
+- intent: results survive a server restart in SQLite under data/
+  requirement_ids:
+  - REQ-7
+- intent: game still works when the server is unreachable; explain and offer retry
+  requirement_ids:
+  - REQ-8
+  - REQ-9
+- intent: testable Fastify API, storage through one module, no new dependencies
+  requirement_ids:
+  - REQ-10
+  - REQ-7
